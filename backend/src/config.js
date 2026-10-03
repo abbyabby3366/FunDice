@@ -13,6 +13,7 @@ export const DEFAULTS = Object.freeze({
   nodeEnv: 'development',
   port: 3000,
   jwtSecret: undefined,
+  mongodbUri: undefined,
   rollHistory: 5,
   diceCount: 5,
   peeksPerGame: 3,
@@ -88,5 +89,6 @@ export function loadConfig(env = process.env, logger = console) {
     disconnectGraceMs: readNumber(env, 'DISCONNECT_GRACE_MS', { min: 1, max: DAY }),
   };
   const defined = Object.fromEntries(Object.entries(fromEnv).filter(([, value]) => value !== undefined));
-  return resolveConfig({ ...defined, nodeEnv, jwtSecret });
+  const mongodbUri = env.MONGODB_URI?.trim() || undefined;
+  return resolveConfig({ ...defined, nodeEnv, jwtSecret, mongodbUri });
 }

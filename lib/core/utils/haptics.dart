@@ -25,4 +25,28 @@ class AppHaptics {
   static void success() {
     if (enabled) HapticFeedback.heavyImpact();
   }
+
+  static void rollSettled() {
+    if (enabled) HapticFeedback.mediumImpact();
+  }
+
+  static void buttonPress() {
+    if (enabled) HapticFeedback.lightImpact();
+  }
+
+  static void warning() {
+    if (enabled) HapticFeedback.heavyImpact();
+  }
+
+  static void bidPlaced() {
+    if (enabled) HapticFeedback.selectionClick();
+  }
+
+  static void keypadTap() {
+    if (enabled) HapticFeedback.selectionClick();
+  }
+
+  static void challengeCalled() {
+    if (enabled) HapticFeedback.heavyImpact();
+  }
 }

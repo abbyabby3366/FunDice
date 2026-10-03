@@ -7,8 +7,9 @@ WORKDIR /app
 COPY backend/package*.json ./
 RUN npm ci --omit=dev
 
-# Copy backend application source
+# Copy backend application source and dashboard
 COPY backend/src/ ./src/
+COPY backend/public/ ./public/
 
 # Environment defaults
 ENV NODE_ENV=production

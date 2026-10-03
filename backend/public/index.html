@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FunDice Server &middot; Operations Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <header>
+    <div class="header-inner">
+      <div class="brand">
+        <div class="brand-icon">🎲</div>
+        <div>
+          <div class="brand-title">FunDice Server Status</div>
+          <div class="brand-sub">Real-Time Operations &amp; State</div>
+        </div>
+      </div>
+      <div class="live-status">
+        <div class="pulse-dot"></div>
+        <span id="sync-status">Live Polling (3s)</span>
+      </div>
+    </div>
+  </header>
+
+  <div id="error-banner" class="error-banner hidden">
+    <span>⚠️</span>
+    <span id="error-message">Unable to reach FunDice backend. Retrying automatically...</span>
+  </div>
+
+  <main>
+    <nav class="nav-tabs" aria-label="Dashboard Sections">
+      <button class="tab-btn active" onclick="switchTab('overview')">📊 Overview</button>
+      <button class="tab-btn" onclick="switchTab('games')">🎮 Live Games</button>
+      <button class="tab-btn" onclick="switchTab('players')">👥 Players</button>
+      <button class="tab-btn" onclick="switchTab('rolls')">🎲 Recent Rolls</button>
+      <button class="tab-btn" onclick="switchTab('invites')">✉️ Invitations</button>
+      <button class="tab-btn" onclick="switchTab('config')">⚙️ Configuration</button>
+    </nav>
+
+    <!-- TAB 1: OVERVIEW -->
+    <section id="tab-overview">
+      <div class="grid-metrics">
+        <div class="metric-card">
+          <div class="metric-title">Online Players</div>
+          <div class="metric-val" id="metric-online">0</div>
+          <div class="metric-sub" id="metric-total-users">0 registered in memory</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-title">Active Games</div>
+          <div class="metric-val" id="metric-games">0</div>
+          <div class="metric-sub">Liar's dice matches in play</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-title">Pending Invites</div>
+          <div class="metric-val" id="metric-invites">0</div>
+          <div class="metric-sub">Awaiting confirmation</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-title">Server Uptime</div>
+          <div class="metric-val" id="metric-uptime">0s</div>
+          <div class="metric-sub" id="metric-env">Node.js</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <h2 class="card-title">System &amp; Server Health</h2>
+        </div>
+        <div class="config-grid">
+          <div class="config-row">
+            <span class="config-key">Server Status</span>
+            <span class="badge badge-online">Operational (200 OK)</span>
+          </div>
+          <div class="config-row">
+            <span class="config-key">Node Engine</span>
+            <span class="config-val" id="sys-node">—</span>
+          </div>
+          <div class="config-row">
+            <span class="config-key">Process Memory (Heap)</span>
+            <span class="config-val" id="sys-heap">—</span>
+          </div>
+          <div class="config-row">
+            <span class="config-key">Environment Mode</span>
+            <span class="config-val" id="sys-env">—</span>
+          </div>
+          <div class="config-row">
+            <span class="config-key">Listening Port</span>
+            <span class="config-val" id="sys-port">—</span>
+          </div>
+          <div class="config-row">
+            <span class="config-key">MongoDB Database</span>
+            <span class="config-val" id="sys-db">—</span>
+          </div>
+          <div class="config-row">
+            <span class="config-key">Server Time (GMT+8)</span>
+            <span class="config-val" id="sys-time">—</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 2: GAMES -->
+    <section id="tab-games" class="hidden">
+      <div class="card">
+        <div class="card-head">
+          <h2 class="card-title">Live &amp; Recent Games</h2>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Game ID</th>
+                <th>Status</th>
+                <th>Round</th>
+                <th>Players &amp; Dice</th>
+                <th>Turn / Bid</th>
+                <th>Winner / End</th>
+                <th>Started</th>
+              </tr>
+            </thead>
+            <tbody id="games-tbody">
+              <tr><td colspan="7" style="text-align: center; color: var(--text-dim);">No active or recent games.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 3: PLAYERS -->
+    <section id="tab-players" class="hidden">
+      <div class="card">
+        <div class="card-head">
+          <h2 class="card-title">Active Players</h2>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Player ID</th>
+                <th>Name</th>
+                <th>Status</th>
+                <th>Sockets</th>
+                <th>Rolls</th>
+                <th>Last Seen</th>
+                <th>Registered</th>
+              </tr>
+            </thead>
+            <tbody id="players-tbody">
+              <tr><td colspan="7" style="text-align: center; color: var(--text-dim);">No players connected.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 4: RECENT ROLLS -->
+    <section id="tab-rolls" class="hidden">
+      <div class="card">
+        <div class="card-head">
+          <h2 class="card-title">Global Roll History</h2>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Seq #</th>
+                <th>Player</th>
+                <th>Dice (Left &rarr; Right)</th>
+                <th>Timestamp</th>
+              </tr>
+            </thead>
+            <tbody id="rolls-tbody">
+              <tr><td colspan="4" style="text-align: center; color: var(--text-dim);">No rolls recorded yet.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 5: INVITATIONS -->
+    <section id="tab-invites" class="hidden">
+      <div class="card">
+        <div class="card-head">
+          <h2 class="card-title">Pairing &amp; Match Invitations</h2>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Invite ID</th>
+                <th>From</th>
+                <th>To</th>
+                <th>Status</th>
+                <th>Created</th>
+                <th>Expires</th>
+              </tr>
+            </thead>
+            <tbody id="invites-tbody">
+              <tr><td colspan="6" style="text-align: center; color: var(--text-dim);">No invitations active.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 6: CONFIG -->
+    <section id="tab-config" class="hidden">
+      <div class="card">
+        <div class="card-head">
+          <h2 class="card-title">Game &amp; Server Configuration</h2>
+        </div>
+        <div class="config-grid" id="config-grid">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    FunDice Server &bull; Express REST API &bull; WebSocket Hub &bull; In-Memory State
+  </footer>
+
+  <script src="/app.js"></script>
+</body>
+</html>

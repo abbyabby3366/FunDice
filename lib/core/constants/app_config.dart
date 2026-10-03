@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart' show rootBundle;
 
 /// Server address and timing constants shared by the data layer.
 class AppConfig {
@@ -6,13 +7,31 @@ class AppConfig {
 
   /// Server address compiled in with `--dart-define=API_BASE_URL=https://...`.
   static const String _compiledServerUrl = String.fromEnvironment('API_BASE_URL');
+  static String _envFileServerUrl = '';
+
+  /// Reads API_BASE_URL from bundled `assets/.env` if present.
+  static Future<void> loadEnv() async {
+    try {
+      final raw = await rootBundle.loadString('assets/.env');
+      for (final line in raw.split('\n')) {
+        final trimmed = line.trim();
+        if (trimmed.isEmpty || trimmed.startsWith('#')) continue;
+        final eq = trimmed.indexOf('=');
+        if (eq > 0) {
+          final key = trimmed.substring(0, eq).trim();
+          final val = trimmed.substring(eq + 1).trim();
+          if (key == 'API_BASE_URL') {
+            _envFileServerUrl = val;
+          }
+        }
+      }
+    } catch (_) {}
+  }
 
   /// The server the app talks to until the player picks another one in Settings.
-  ///
-  /// Release builds without `API_BASE_URL` return an empty string on purpose: the app
-  /// never guesses a host, it asks for one.
   static String get defaultServerUrl => resolveDefaultServerUrl(
         compiled: _compiledServerUrl,
+        fromEnvFile: _envFileServerUrl,
         debug: kDebugMode,
         platform: defaultTargetPlatform,
       );
@@ -21,14 +40,17 @@ class AppConfig {
   @visibleForTesting
   static String resolveDefaultServerUrl({
     required String compiled,
+    String? fromEnvFile,
     required bool debug,
     required TargetPlatform platform,
   }) {
+    final fromFile = fromEnvFile != null ? normalizeServerUrl(fromEnvFile) : null;
+    if (fromFile != null) return fromFile;
+
     final configured = normalizeServerUrl(compiled);
     if (configured != null) return configured;
-    if (!debug) return '';
-    // The Android emulator reaches the host machine through 10.0.2.2.
-    return platform == TargetPlatform.android ? 'http://10.0.2.2:3000' : 'http://localhost:3000';
+
+    return 'https://fundice.onrender.com';
   }
 
   /// Cleans up an address typed by the player.

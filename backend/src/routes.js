@@ -14,6 +14,7 @@ import {
   otherPlayer,
 } from './game/engine.js';
 import { toView } from './game/view.js';
+import { getStatusData } from './status.js';
 
 function projectGame(game, viewerId, nowMs) {
   if (!game) return null;
@@ -24,7 +25,7 @@ function projectGame(game, viewerId, nowMs) {
   };
 }
 
-export function createRoutes({ config, registry, tokens, wsHub, now }) {
+export function createRoutes({ config, registry, tokens, wsHub, db, now }) {
   const router = express.Router();
   const requireAuth = createRequireAuth({ tokens, registry });
   const validators = createValidators({ diceCount: config.diceCount });
@@ -49,6 +50,15 @@ export function createRoutes({ config, registry, tokens, wsHub, now }) {
   const matchLimiter = makeLimiter(config.limits.match, (req) => req.user?.id || req.ip);
   const gameLimiter = makeLimiter(config.limits.game, (req) => req.user?.id || req.ip);
 
+  // Operations and status dashboard API
+  router.get('/admin/status', async (req, res, next) => {
+    try {
+      res.json(await getStatusData({ config, registry, db, now }));
+    } catch (err) {
+      next(err);
+    }
+  });
+
   // 1. Register or rename / token refresh
   router.post('/register', registerLimiter, (req, res) => {
     const name = validators.registerName(req.body);
@@ -62,6 +72,7 @@ export function createRoutes({ config, registry, tokens, wsHub, now }) {
       user = registry.createUser(name);
     }
     registry.touch(user);
+    db?.saveUser(user);
 
     const token = tokens.sign(user);
     res.status(201).json({
@@ -114,6 +125,13 @@ export function createRoutes({ config, registry, tokens, wsHub, now }) {
 
     const dice = Array.from({ length: config.diceCount }, () => cryptoRng.int(6) + 1);
     const roll = registry.recordRoll(user, dice);
+    db?.recordRoll({
+      userId: user.id,
+      userName: user.name,
+      seq: roll.seq,
+      dice: roll.dice,
+      at: roll.at,
+    });
 
     res.json({
       roll: {
@@ -361,6 +379,7 @@ export function createRoutes({ config, registry, tokens, wsHub, now }) {
     if (nextGame.status === 'finished') {
       const pairKey = [...nextGame.players].sort().join('|');
       registry.finishedPairs.set(pairKey, nowMs);
+      db?.saveFinishedGame(nextGame, nowMs);
     }
     wsHub.broadcastGame(nextGame, nowMs);
   };

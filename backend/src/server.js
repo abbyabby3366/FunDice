@@ -1,4 +1,6 @@
 import http from 'node:http';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import express from 'express';
 import helmet from 'helmet';
 import { rateLimit } from 'express-rate-limit';
@@ -9,14 +11,56 @@ import { createTimers } from './timers.js';
 import { createErrorHandler, notFoundHandler, AppError } from './errors.js';
 import { createWsHub } from './ws.js';
 import { createRoutes } from './routes.js';
+import { Database } from './db.js';
 
-export function createApp({ config, registry, tokens, wsHub, now }) {
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const publicDir = path.resolve(__dirname, '../public');
+
+// Automatically load local .env if present (prioritizes root FunDice/.env, then backend/.env, then cwd)
+for (const envPath of [
+  path.resolve(__dirname, '../../.env'),
+  path.resolve(__dirname, '../.env'),
+  undefined,
+]) {
+  try {
+    if (envPath) {
+      process.loadEnvFile(envPath);
+    } else {
+      process.loadEnvFile();
+    }
+    break;
+  } catch {
+    // Continue searching remaining locations
+  }
+}
+
+export function createApp({ config, registry, tokens, wsHub, db, now }) {
   const app = express();
 
   app.set('trust proxy', 1);
   app.disable('x-powered-by');
-  app.use(helmet());
+  app.use(
+    helmet({
+      contentSecurityPolicy: {
+        directives: {
+          defaultSrc: ["'self'"],
+          scriptSrc: ["'self'", "'unsafe-inline'"],
+          styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
+          fontSrc: ["'self'", 'https://fonts.gstatic.com'],
+          imgSrc: ["'self'", 'data:'],
+          connectSrc: ["'self'"],
+        },
+      },
+    }),
+  );
   app.use(express.json({ limit: '10kb' }));
+
+  // Serve Operations Dashboard
+  app.use(express.static(publicDir));
+  app.get(['/', '/admin', '/status'], (req, res) => {
+    res.sendFile(path.join(publicDir, 'index.html'));
+  });
 
   // Health check endpoint (SPEC 3.2: no auth)
   app.get('/healthz', (req, res) => {
@@ -42,7 +86,7 @@ export function createApp({ config, registry, tokens, wsHub, now }) {
   );
 
   // Mount API endpoints
-  app.use('/api', createRoutes({ config, registry, tokens, wsHub, now }));
+  app.use('/api', createRoutes({ config, registry, tokens, wsHub, db, now }));
 
   // 404 & Central Error Handling
   app.use(notFoundHandler);
@@ -57,6 +101,8 @@ export function startServer(env = process.env) {
   const timers = createTimers({ onError: console.error });
   const registry = new Registry({ config, now });
   const tokens = createTokens({ jwtSecret: config.jwtSecret, tokenTtlSec: config.tokenTtlSec });
+  const db = new Database(config.mongodbUri);
+  db.connect().catch((err) => console.error('MongoDB init error:', err));
 
   let wsHub;
   const hubProxy = {
@@ -64,7 +110,7 @@ export function startServer(env = process.env) {
     broadcastGame: (...args) => wsHub?.broadcastGame(...args),
   };
 
-  const app = createApp({ config, registry, tokens, wsHub: hubProxy, now });
+  const app = createApp({ config, registry, tokens, wsHub: hubProxy, db, now });
   const server = http.createServer(app);
 
   wsHub = createWsHub({ config, registry, tokens, timers, now });
@@ -101,10 +147,15 @@ export function startServer(env = process.env) {
     console.log(`FunDice backend running on port ${config.port} (env: ${config.nodeEnv})`);
   });
 
-  const shutdown = () => {
+  const shutdown = async () => {
     console.log('Shutting down FunDice backend...');
     timers.clearAll();
     wsHub.closeAll(1012, 'Service Restart');
+    try {
+      await db.close();
+    } catch {
+      // Ignore teardown errors
+    }
     server.close(() => {
       console.log('Server stopped.');
       process.exit(0);

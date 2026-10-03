@@ -91,10 +91,9 @@ export function createWsHub({ config, registry, tokens, timers, now }) {
 
   wss.on('connection', (ws) => {
     let authenticatedUser = null;
-    let isAlive = true;
-
+    ws.isAlive = true;
     ws.on('pong', () => {
-      isAlive = true;
+      ws.isAlive = true;
     });
 
     // 5-second auth timeout

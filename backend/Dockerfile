@@ -7,8 +7,9 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm ci --omit=dev
 
-# Copy application source
+# Copy application source and dashboard
 COPY src/ ./src/
+COPY public/ ./public/
 
 # Environment defaults
 ENV NODE_ENV=production
