@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="180" viewBox="0 0 240 180">
+<path d="M116 22C177.2 22 218 46.8 218 84C218 132 181.2 164 126 164C63.6 164 22 137.6 22 98C22 52.4 59.6 22 116 22Z" fill="#D6F2E8"/>
+<path d="M88 34C114.4 34 132 40.4 132 50C132 65.6 117.6 76 96 76C66 76 46 68.8 46 58C46 43.6 62.8 34 88 34Z" fill="#FFFFFF" fill-opacity="0.45"/>
+<ellipse cx="110" cy="150" rx="50" ry="6" fill="#0E7A5F" fill-opacity="0.14"/>
+<path d="M152 146L160 40" fill="none" stroke="#98A29E" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M160 48C172 42 182 56 198 50L194 76C180 82 172 68 158 74Z" fill="#FFFFFF" stroke="#E2E5DF" stroke-width="2" stroke-linejoin="round"/>
+<circle cx="160" cy="40" r="4.5" fill="#F2B632"/>
+<g transform="translate(106 106) rotate(-20) scale(0.62) translate(-60 -60)"><rect x="0" y="0" width="120" height="120" rx="21.6" fill="#E6DFCB"/><rect x="2" y="2" width="116" height="110" rx="19.6" fill="#FFFCF2"/><circle cx="33" cy="30" r="9.5" fill="#1F2328"/><circle cx="87" cy="84" r="9.5" fill="#1F2328"/></g>
+<path d="M44 37Q45.44 44.56 53 46Q45.44 47.44 44 55Q42.56 47.44 35 46Q42.56 44.56 44 37Z" fill="#F2B632"/>
+<path d="M35 122L45 122M40 117L40 127" fill="none" stroke="#0E7A5F" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="204" cy="124" r="4" fill="#0E7A5F"/>
+</svg>

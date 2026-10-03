@@ -1,0 +1,26 @@
+"""Colour tokens of SPEC section 5. Every asset is drawn with these colours only."""
+
+PRIMARY = "#0E7A5F"
+PRIMARY_DARK = "#0A5C47"
+PRIMARY_LIGHT = "#D6F2E8"
+
+FELT = "#0B5D46"
+FELT_LIGHT = "#0F7357"
+
+GOLD = "#F2B632"
+GOLD_DARK = "#B9851A"
+GOLD_LIGHT = "#FFF3D1"
+
+DIE_FACE = "#FFFCF2"
+DIE_EDGE = "#E6DFCB"
+PIP = "#1F2328"
+PIP_RED = "#D93636"
+
+BACKGROUND = "#F6F7F5"
+SURFACE = "#FFFFFF"
+BORDER = "#E2E5DF"
+
+TEXT_SECONDARY = "#5E6A66"
+TEXT_MUTED = "#98A29E"
+
+DANGER = "#E5484D"

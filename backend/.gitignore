@@ -1,0 +1,22 @@
+# Node.js dependencies
+node_modules/
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Environment and local configs
+.env
+.env.*
+!.env.example
+!.env.template
+
+# Coverage and build output
+dist/
+coverage/
+.nyc_output/
