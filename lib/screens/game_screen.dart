@@ -202,7 +202,13 @@ class _GameScreenState extends State<GameScreen> {
       if (oppDice[i] != null) oppStates[i] = DieState.peeked;
     }
 
-    return Scaffold(
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        _handleForfeit();
+      },
+      child: Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
         backgroundColor: AppColors.surface,
@@ -452,8 +458,9 @@ class _GameScreenState extends State<GameScreen> {
           ],
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildGameOverScreen(GameView game) {
     final won = game.iWon;
