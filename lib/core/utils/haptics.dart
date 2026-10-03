@@ -1,6 +1,6 @@
 import 'package:flutter/services.dart';
 
-/// Micro-haptic helper. [enabled] mirrors the user's Settings toggle (set by AppController).
+/// Micro-haptic helper for tactile feedback on dice rolls and interactions.
 class AppHaptics {
   AppHaptics._();
 
@@ -20,6 +20,10 @@ class AppHaptics {
 
   static void selectionClick() {
     if (enabled) HapticFeedback.selectionClick();
+  }
+
+  static void diceSelect() {
+    if (enabled) HapticFeedback.lightImpact();
   }
 
   static void success() {

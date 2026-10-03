@@ -131,6 +131,8 @@ class _GameScreenState extends State<GameScreen> {
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         backgroundColor: AppColors.surface,
+        insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+        actionsPadding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
         title: Text(
           result.bidHeld ? 'Challenge Failed!' : 'Bluff Called!',
           style: const TextStyle(fontWeight: FontWeight.w800),

@@ -1,17 +1,17 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../core/theme/app_colors.dart';
-import '../core/utils/date_formatter.dart';
 import '../core/utils/haptics.dart';
 import '../state/app_controller.dart';
 import '../state/app_scope.dart';
 import '../widgets/app_button.dart';
-import '../widgets/dice_row.dart';
 import '../widgets/felt_panel.dart';
 import '../widgets/rolling_dice.dart';
-import '../widgets/section_header.dart';
+import '../widgets/secret_keypad_sheet.dart';
 
 /// The Roll Tab: lets players roll their 5 dice, view frequencies, and review recent roll history.
+/// Contains a discreet secret trigger (tapping Help 5 times) to open the Secret Opponent Keypad.
 class RollScreen extends StatefulWidget {
   const RollScreen({super.key});
 
@@ -23,6 +23,17 @@ class _RollScreenState extends State<RollScreen> {
   bool _isRolling = false;
   List<int?> _currentDice = [null, null, null, null, null];
 
+  // Secret 5-tap detector on Help icon
+  int _helpTapCount = 0;
+  DateTime? _lastHelpTap;
+  Timer? _helpTapTimer;
+
+  @override
+  void dispose() {
+    _helpTapTimer?.cancel();
+    super.dispose();
+  }
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -30,6 +41,57 @@ class _RollScreenState extends State<RollScreen> {
     if (!_isRolling && controller.rolls.isNotEmpty) {
       _currentDice = controller.rolls.last.dice.map((d) => d as int?).toList();
     }
+  }
+
+  void _onHelpTap() {
+    final now = DateTime.now();
+    if (_lastHelpTap == null ||
+        now.difference(_lastHelpTap!) > const Duration(seconds: 2)) {
+      _helpTapCount = 1;
+    } else {
+      _helpTapCount++;
+    }
+    _lastHelpTap = now;
+
+    if (_helpTapCount >= 5) {
+      _helpTapTimer?.cancel();
+      _helpTapCount = 0;
+      AppHaptics.diceSelect(); // Subtle tactile haptic buzz on 5th tap
+      SecretKeypadSheet.show(context);
+    } else {
+      _helpTapTimer?.cancel();
+      _helpTapTimer = Timer(const Duration(milliseconds: 350), () {
+        if (_helpTapCount == 1 && mounted) {
+          _showHelpDialog();
+        }
+      });
+    }
+  }
+
+  void _showHelpDialog() {
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        backgroundColor: AppColors.surface,
+        title: const Text('Rolling Dice',
+            style: TextStyle(fontWeight: FontWeight.w700)),
+        content: const Text(
+          'Tap "Roll Dice" to cast all 5 dice on the felt tray.\n\n'
+          'Your roll is saved in your history and synchronized with the server when you are connected.',
+          style: TextStyle(
+              fontSize: 14.5, height: 1.4, color: AppColors.textSecondary),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Got it',
+                style: TextStyle(
+                    color: AppColors.primary, fontWeight: FontWeight.w600)),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _handleRoll() async {
@@ -54,15 +116,6 @@ class _RollScreenState extends State<RollScreen> {
     }
   }
 
-  Map<int, int> _counts() {
-    final map = {1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0};
-    for (final d in _currentDice) {
-      if (d != null && map.containsKey(d)) {
-        map[d] = map[d]! + 1;
-      }
-    }
-    return map;
-  }
 
   int _totalSum() {
     int sum = 0;
@@ -76,9 +129,7 @@ class _RollScreenState extends State<RollScreen> {
   Widget build(BuildContext context) {
     final controller = AppScope.of(context);
     final isOnline = controller.serverStatus == ServerStatus.online;
-    final counts = _counts();
     final hasRolled = _currentDice.any((d) => d != null);
-    final reversedRolls = controller.rolls.reversed.toList();
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -106,6 +157,14 @@ class _RollScreenState extends State<RollScreen> {
             ),
           ],
         ),
+        actions: [
+          IconButton(
+            tooltip: 'Help',
+            icon: const Icon(Icons.help_outline,
+                color: AppColors.textSecondary),
+            onPressed: _onHelpTap,
+          ),
+        ],
         centerTitle: false,
         elevation: 0,
         backgroundColor: AppColors.background,
@@ -115,6 +174,7 @@ class _RollScreenState extends State<RollScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            // Felt dice tray
             FeltPanel(
               child: Column(
                 children: [
@@ -123,32 +183,16 @@ class _RollScreenState extends State<RollScreen> {
                     values: _currentDice,
                     rolling: _isRolling,
                     dieSize: 56,
+                    spacing: 12,
                   ),
                   const SizedBox(height: 18),
                   if (hasRolled && !_isRolling) ...[
                     Text(
                       'Total: ${_totalSum()}',
                       style: const TextStyle(
-                        fontSize: 16,
+                        fontSize: 18,
                         fontWeight: FontWeight.w700,
                         color: AppColors.goldLight,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: Colors.black.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Text(
-                        '1×${counts[1]}  2×${counts[2]}  3×${counts[3]}  4×${counts[4]}  5×${counts[5]}  6×${counts[6]}',
-                        style: const TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w500,
-                          color: Colors.white,
-                          letterSpacing: 0.5,
-                        ),
                       ),
                     ),
                   ] else ...[
@@ -165,77 +209,13 @@ class _RollScreenState extends State<RollScreen> {
                 ],
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 20),
             AppButton(
               label: _isRolling ? 'Rolling...' : 'Roll Dice',
-              icon: Icons.refresh,
+              icon: Icons.casino_outlined,
               loading: _isRolling,
               onPressed: _isRolling ? null : _handleRoll,
             ),
-            const SizedBox(height: 10),
-            Center(
-              child: Text(
-                isOnline
-                    ? "Friends find you by these dice while you're online."
-                    : 'Offline — local roll only.',
-                style: const TextStyle(
-                  fontSize: 12.5,
-                  color: AppColors.textSecondary,
-                ),
-              ),
-            ),
-            const SizedBox(height: 24),
-            const SectionHeader('Recent Rolls'),
-            if (reversedRolls.isEmpty)
-              Container(
-                padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  color: AppColors.surface,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: AppColors.border),
-                ),
-                alignment: Alignment.center,
-                child: const Text(
-                  'No rolls yet. Hit Roll Dice to begin!',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-              )
-            else
-              ListView.separated(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: reversedRolls.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 8),
-                itemBuilder: (context, idx) {
-                  final r = reversedRolls[idx];
-                  return Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                    decoration: BoxDecoration(
-                      color: AppColors.surface,
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(color: AppColors.border),
-                    ),
-                    child: Row(
-                      children: [
-                        // Stacked date and time complying with User Rule #2
-                        StackedDateTimeView(
-                          dateTime: r.at,
-                          isTimePrimary: true,
-                        ),
-                        const Spacer(),
-                        DiceRow(
-                          values: r.dice.map((d) => d as int?).toList(),
-                          dieSize: 32,
-                          spacing: 4,
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              ),
             const SizedBox(height: 24),
           ],
         ),

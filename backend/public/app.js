@@ -134,19 +134,6 @@ async function updateDashboard() {
       }).join('');
     }
 
-    // Rolls Table
-    const rollsTbody = document.getElementById('rolls-tbody');
-    if (data.recentRolls.length === 0) {
-      rollsTbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--text-dim);">No rolls recorded yet.</td></tr>';
-    } else {
-      rollsTbody.innerHTML = data.recentRolls.map(r => `<tr>
-        <td><code>#${r.seq}</code></td>
-        <td><strong>${r.userName}</strong></td>
-        <td>${renderDice(r.dice)}</td>
-        <td>${renderDateTimeCell(r.at)}</td>
-      </tr>`).join('');
-    }
-
     // Invites Table
     const invitesTbody = document.getElementById('invites-tbody');
     if (data.invites.length === 0) {

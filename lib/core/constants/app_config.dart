@@ -28,7 +28,7 @@ class AppConfig {
     } catch (_) {}
   }
 
-  /// The server the app talks to until the player picks another one in Settings.
+  /// The default server the app connects to, configured via environment.
   static String get defaultServerUrl => resolveDefaultServerUrl(
         compiled: _compiledServerUrl,
         fromEnvFile: _envFileServerUrl,

@@ -70,6 +70,19 @@ class LocalStore {
     await _prefs.setInt(_keyGamesWon, wins);
   }
 
+  static const String _keyAliasesPrefix = 'fundice_alias_';
+
+  String? getAlias(String userId) => _prefs.getString('$_keyAliasesPrefix$userId');
+
+  Future<void> setAlias(String userId, String alias) async {
+    final clean = alias.trim();
+    if (clean.isEmpty) {
+      await _prefs.remove('$_keyAliasesPrefix$userId');
+    } else {
+      await _prefs.setString('$_keyAliasesPrefix$userId', clean);
+    }
+  }
+
   Future<void> clearIdentity() async {
     await _prefs.remove(_keyToken);
     await _prefs.remove(_keyUserId);

@@ -78,13 +78,18 @@ class AppButton extends StatelessWidget {
           Icon(icon, size: 20, color: fg),
           const SizedBox(width: 8),
         ],
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 17,
-            fontWeight: FontWeight.w600,
-            color: fg,
-            letterSpacing: -0.2,
+        Flexible(
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: fg,
+                letterSpacing: -0.2,
+              ),
+            ),
           ),
         ),
       ],
@@ -108,7 +113,7 @@ class AppButton extends StatelessWidget {
                   onPressed?.call();
                 },
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
+            padding: const EdgeInsets.symmetric(horizontal: 12),
             child: content,
           ),
         ),

@@ -88,7 +88,7 @@ class ApiClient {
     try {
       final res = await _client
           .get(Uri.parse('$baseUrl/healthz'))
-          .timeout(const Duration(seconds: 4));
+          .timeout(const Duration(seconds: 10));
       return res.statusCode == 200;
     } catch (_) {
       return false;

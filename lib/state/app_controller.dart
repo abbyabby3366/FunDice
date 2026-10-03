@@ -243,6 +243,11 @@ class AppController extends ChangeNotifier {
     }
   }
 
+  void clearRolls() {
+    _rolls = [];
+    notifyListeners();
+  }
+
   Future<MatchResult> match(List<int> dice, {List<int>? next}) async {
     return _api.match(dice, next: next);
   }
@@ -377,6 +382,13 @@ class AppController extends ChangeNotifier {
       }
       _game = newGame;
     }
+  }
+
+  String? getAlias(String userId) => _store.getAlias(userId);
+
+  Future<void> saveAlias(String userId, String alias) async {
+    await _store.setAlias(userId, alias);
+    notifyListeners();
   }
 
   @override

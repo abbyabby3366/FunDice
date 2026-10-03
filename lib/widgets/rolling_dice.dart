@@ -96,40 +96,76 @@ class _RollingDiceState extends State<RollingDice> with SingleTickerProviderStat
     super.dispose();
   }
 
+  Widget _buildDie(int index, double progress) {
+    final val = widget.rolling
+        ? _displayFaces[index]
+        : widget.values[index];
+
+    final wobble = widget.rolling
+        ? math.sin((progress * 2 * math.pi) + index) * 0.15
+        : 0.0;
+    final bounce = widget.rolling
+        ? math.cos((progress * 4 * math.pi) + index) * 4.0
+        : 0.0;
+
+    return Transform.translate(
+      offset: Offset(0, bounce),
+      child: Transform.rotate(
+        angle: wobble,
+        child: DieView(
+          value: val,
+          size: widget.dieSize,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return AnimatedBuilder(
       animation: _controller,
       builder: (context, _) {
         final progress = _controller.value;
+
+        // Custom 3 2 arrangement for 5 dice
+        if (widget.values.length == 5) {
+          return Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  _buildDie(0, progress),
+                  SizedBox(width: widget.spacing),
+                  _buildDie(1, progress),
+                  SizedBox(width: widget.spacing),
+                  _buildDie(2, progress),
+                ],
+              ),
+              SizedBox(height: widget.spacing),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  _buildDie(3, progress),
+                  SizedBox(width: widget.spacing),
+                  _buildDie(4, progress),
+                ],
+              ),
+            ],
+          );
+        }
+
         return Wrap(
           alignment: WrapAlignment.center,
           crossAxisAlignment: WrapCrossAlignment.center,
           spacing: widget.spacing,
           runSpacing: widget.spacing,
-          children: List.generate(widget.values.length, (index) {
-            final val = widget.rolling
-                ? _displayFaces[index]
-                : widget.values[index];
-
-            final wobble = widget.rolling
-                ? math.sin((progress * 2 * math.pi) + index) * 0.15
-                : 0.0;
-            final bounce = widget.rolling
-                ? math.cos((progress * 4 * math.pi) + index) * 4.0
-                : 0.0;
-
-            return Transform.translate(
-              offset: Offset(0, bounce),
-              child: Transform.rotate(
-                angle: wobble,
-                child: DieView(
-                  value: val,
-                  size: widget.dieSize,
-                ),
-              ),
-            );
-          }),
+          children: List.generate(
+            widget.values.length,
+            (index) => _buildDie(index, progress),
+          ),
         );
       },
     );

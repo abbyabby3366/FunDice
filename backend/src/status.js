@@ -35,7 +35,6 @@ export async function getStatusData({ config, registry, db, now }) {
   };
 
   const users = [];
-  const allRolls = [];
   for (const user of registry.users.values()) {
     const isOnline = registry.isOnline(user.id);
     const socketCount = registry.sockets.get(user.id)?.size || 0;
@@ -47,27 +46,8 @@ export async function getStatusData({ config, registry, db, now }) {
       isOnline,
       socketCount,
       rollCount: user.rollSeq,
-      rolls: user.rolls.map((r) => ({
-        seq: r.seq,
-        dice: r.dice,
-        at: r.at,
-      })),
     });
-
-    for (const r of user.rolls) {
-      allRolls.push({
-        userId: user.id,
-        userName: user.name,
-        seq: r.seq,
-        dice: r.dice,
-        at: r.at,
-      });
-    }
   }
-
-  // Sort newest first
-  allRolls.sort((a, b) => b.at - a.at);
-  const recentRolls = allRolls.slice(0, 50);
 
   const games = [];
   for (const game of registry.games.values()) {
@@ -125,11 +105,9 @@ export async function getStatusData({ config, registry, db, now }) {
       onlineUsers: users.filter((u) => u.isOnline).length,
       activeGames: games.filter((g) => g.status === 'playing').length,
       pendingInvites: invites.filter((i) => i.status === 'pending').length,
-      totalRolls: allRolls.length,
     },
     users,
     games,
     invites,
-    recentRolls,
   };
 }

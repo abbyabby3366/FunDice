@@ -6,11 +6,9 @@ import '../widgets/app_toast.dart';
 import '../widgets/connection_status_banner.dart';
 import '../widgets/invite_sheet.dart';
 import 'game_screen.dart';
-import 'play_screen.dart';
 import 'roll_screen.dart';
-import 'settings_screen.dart';
 
-/// The central shell managing the 3-tab navigation, incoming invites, and game transitions.
+/// The central shell hosting the main Roll view, incoming invites, and game transitions.
 class HomeShell extends StatefulWidget {
   const HomeShell({super.key});
 
@@ -19,7 +17,6 @@ class HomeShell extends StatefulWidget {
 }
 
 class _HomeShellState extends State<HomeShell> {
-  int _currentIndex = 0;
   String? _lastShownInviteId;
   bool _gameScreenOpen = false;
 
@@ -68,46 +65,13 @@ class _HomeShellState extends State<HomeShell> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return const Scaffold(
       backgroundColor: AppColors.background,
       body: Column(
         children: [
-          const ConnectionStatusBanner(),
+          ConnectionStatusBanner(),
           Expanded(
-            child: IndexedStack(
-              index: _currentIndex,
-              children: const [
-                RollScreen(),
-                PlayScreen(),
-                SettingsScreen(),
-              ],
-            ),
-          ),
-        ],
-      ),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _currentIndex,
-        elevation: 4,
-        backgroundColor: AppColors.surface,
-        indicatorColor: AppColors.primaryLight,
-        onDestinationSelected: (idx) {
-          setState(() => _currentIndex = idx);
-        },
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.casino_outlined),
-            selectedIcon: Icon(Icons.casino, color: AppColors.primaryDark),
-            label: 'Roll',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.play_circle_outline),
-            selectedIcon: Icon(Icons.play_circle, color: AppColors.primaryDark),
-            label: 'Play',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.settings_outlined),
-            selectedIcon: Icon(Icons.settings, color: AppColors.primaryDark),
-            label: 'Settings',
+            child: RollScreen(),
           ),
         ],
       ),

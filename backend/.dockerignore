@@ -1,10 +1,27 @@
-node_modules
+# ==============================================================================
+# Backend Directory .dockerignore
+# Used when building with backend/ as rootDir (e.g. Render blueprint)
+# ==============================================================================
+
+node_modules/
+**/node_modules/
+test/
+scripts/
+coverage/
+dist/
+
+# Git & IDEs
+.git/
+.gitignore
+.idea/
+.vscode/
+
+# Environment Variables & Secrets
+.env
+.env.*
+
+# Logs
+*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-.git
-.gitignore
-.env
-.env.*
-dist
-coverage

@@ -37,7 +37,8 @@ Future<bool> showConfirmDialog({
           height: 1.4,
         ),
       ),
-      actionsPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+      actionsPadding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
       actions: [
         Row(
           children: [
@@ -48,7 +49,7 @@ Future<bool> showConfirmDialog({
                 onPressed: () => Navigator.of(ctx).pop(false),
               ),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: 10),
             Expanded(
               child: AppButton(
                 label: confirmLabel,
